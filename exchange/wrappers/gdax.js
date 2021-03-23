@@ -1,4 +1,4 @@
-const Gdax = require('gdax');
+const Gdax = require('Gdax');
 const _ = require('lodash');
 const moment = require('moment');
 
@@ -13,7 +13,7 @@ const marketData = require('./coinbase-markets.json');
 const Trader = function(config) {
   this.post_only = true;
   this.use_sandbox = false;
-  this.name = 'GDAX';
+  this.name = 'Gdax';
   this.scanback = false;
   this.scanbackTid = 0;
   this.scanbackResults = [];
@@ -38,10 +38,10 @@ const Trader = function(config) {
 
   }
 
-  this.gdax_public = new Gdax.PublicClient(
+  this.Gdax_public = new Gdax.PublicClient(
     this.use_sandbox ? this.api_sandbox_url : undefined
   );
-  this.gdax = new Gdax.AuthenticatedClient(
+  this.Gdax = new Gdax.AuthenticatedClient(
     this.key,
     this.secret,
     this.passphrase,
@@ -57,7 +57,7 @@ const recoverableErrors = [
   'NOTFOUND',
   'Rate limit exceeded',
   'Response code 5',
-  'GDAX is currently under maintenance.',
+  'Gdax is currently under maintenance.',
   'HTTP 408 Error',
   'HTTP 504 Error',
   'HTTP 503 Error',
@@ -122,7 +122,7 @@ Trader.prototype.getPortfolio = function(callback) {
   };
 
   const fetch = cb =>
-    this.gdax.getAccounts(this.processResponse('getPortfolio', cb));
+    this.Gdax.getAccounts(this.processResponse('getPortfolio', cb));
   retry(null, fetch, result);
 };
 
@@ -133,17 +133,17 @@ Trader.prototype.getTicker = function(callback) {
   };
 
   const fetch = cb =>
-    this.gdax_public.getProductTicker(this.pair, this.processResponse('getTicker', cb));
+    this.Gdax_public.getProductTicker(this.pair, this.processResponse('getTicker', cb));
   retry(null, fetch, result);
 };
 
 Trader.prototype.getFee = function(callback) {
-  //https://www.gdax.com/fees
+  //https://www.Gdax.com/fees
   // const fee = this.asset == 'BTC' ? 0.0025 : 0.003;
   const fee = 0;
 
   //There is no maker fee, not sure if we need taker fee here
-  //If post only is enabled, gdax only does maker trades which are free
+  //If post only is enabled, Gdax only does maker trades which are free
   callback(undefined, this.post_only ? 0 : fee);
 };
 
@@ -172,7 +172,7 @@ Trader.prototype.buy = function(amount, price, callback) {
   };
 
   const fetch = cb =>
-    this.gdax.buy(buyParams, this.processResponse('buy', cb));
+    this.Gdax.buy(buyParams, this.processResponse('buy', cb));
   retry(null, fetch, result);
 };
 
@@ -200,7 +200,7 @@ Trader.prototype.sell = function(amount, price, callback) {
   };
 
   const fetch = cb =>
-    this.gdax.sell(sellParams, this.processResponse('sell', cb));
+    this.Gdax.sell(sellParams, this.processResponse('sell', cb));
   retry(null, fetch, result);
 };
 
@@ -209,7 +209,7 @@ Trader.prototype.checkOrder = function(order, callback) {
     if (err) return callback(err);
 
     // @link:
-    // https://stackoverflow.com/questions/48132078/available-gdax-order-statuses-and-meanings
+    // https://stackoverflow.com/questions/48132078/available-Gdax-order-statuses-and-meanings
     var status = data.status;
     if(status == 'pending') {
       // technically not open yet, but will be soon
@@ -226,7 +226,7 @@ Trader.prototype.checkOrder = function(order, callback) {
   };
 
   const fetch = cb =>
-    this.gdax.getOrder(order, this.processResponse('checkOrder', cb));
+    this.Gdax.getOrder(order, this.processResponse('checkOrder', cb));
   retry(null, fetch, result);
 };
 
@@ -238,7 +238,7 @@ Trader.prototype.getOrder = function(order, callback) {
     const amount = parseFloat(data.filled_size);
     const date = moment(data.done_at);
     const fees = {
-      // you always pay fee in the base currency on gdax
+      // you always pay fee in the base currency on Gdax
       [this.currency]: +data.fill_fees
     }
     const feePercent = +data.fill_fees / price / amount * 100;
@@ -247,7 +247,7 @@ Trader.prototype.getOrder = function(order, callback) {
   };
 
   const fetch = cb =>
-    this.gdax.getOrder(order, this.processResponse('getOrder', cb));
+    this.Gdax.getOrder(order, this.processResponse('getOrder', cb));
   retry(null, fetch, result);
 };
 
@@ -262,7 +262,7 @@ Trader.prototype.cancelOrder = function(order, callback) {
   };
 
   const fetch = cb =>
-    this.gdax.cancelOrder(order, this.processResponse('cancelOrder', cb));
+    this.Gdax.cancelOrder(order, this.processResponse('cancelOrder', cb));
   retry(null, fetch, result);
 };
 
@@ -294,7 +294,7 @@ Trader.prototype.getTrades = function(since, callback, descending) {
           console.log('Scanning backwards...' + last.time);
           setTimeout(() => {
             let handler = cb =>
-              this.gdax_public.getProductTrades(
+              this.Gdax_public.getProductTrades(
                 this.pair,
                 {
                   after: last.trade_id - BATCH_SIZE * lastScan,
@@ -335,7 +335,7 @@ Trader.prototype.getTrades = function(since, callback, descending) {
           this.scanbackTid = first.trade_id;
           setTimeout(() => {
             let handler = cb =>
-              this.gdax_public.getProductTrades(
+              this.Gdax_public.getProductTrades(
                 this.pair,
                 { after: this.scanbackTid + BATCH_SIZE + 1, limit: BATCH_SIZE },
                 this.processResponse('getTrades', cb)
@@ -365,7 +365,7 @@ Trader.prototype.getTrades = function(since, callback, descending) {
     this.scanback = true;
     if (this.scanbackTid) {
       let handler = cb =>
-        this.gdax_public.getProductTrades(
+        this.Gdax_public.getProductTrades(
           this.pair,
           { after: this.scanbackTid + BATCH_SIZE + 1, limit: BATCH_SIZE },
           this.processResponse('getTrades', cb)
@@ -381,7 +381,7 @@ Trader.prototype.getTrades = function(since, callback, descending) {
   }
 
   const fetch = cb =>
-    this.gdax_public.getProductTrades(
+    this.Gdax_public.getProductTrades(
       this.pair,
       { limit: BATCH_SIZE },
       this.processResponse('getTrades', cb)
@@ -412,8 +412,8 @@ Trader.prototype.getMaxDecimalsNumber = function(number, decimalLimit = 8) {
 
 Trader.getCapabilities = function() {
   return {
-    name: 'GDAX',
-    slug: 'gdax',
+    name: 'Gdax',
+    slug: 'Gdax',
     currencies: marketData.currencies,
     assets: marketData.assets,
     markets: marketData.markets,

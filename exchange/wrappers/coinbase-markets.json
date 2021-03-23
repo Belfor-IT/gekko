@@ -4,8 +4,10 @@
     "BTC",
     "BCH",
     "ETH",
+	"ETC",
     "LTC",
-    "ZRX"
+    "ZRX",
+    "ADA"
   ],
   "currencies": [
     "EUR",
